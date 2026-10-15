@@ -1,23 +1,25 @@
-﻿import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function MobileNav() {
   const auth = useAuth() || {};
   const isAdmin = auth.user?.role === "admin";
+  const linkClass = ({ isActive }) =>
+    `mobile-nav-link${isActive ? " active" : ""}`;
 
   return (
-    <nav className="mobile-nav">
-      <Link to="/dashboard">Home</Link>
+    <nav className="mobile-nav" aria-label="Main navigation">
+      <NavLink to="/dashboard" end className={linkClass}>Home</NavLink>
       {isAdmin ? (
         <>
-          <Link to="/users">Users</Link>
-          <Link to="/settings/system">App settings</Link>
-          <Link to="/admin/sales-import">Bulk import</Link>
+          <NavLink to="/users" end className={linkClass}>Users</NavLink>
+          <NavLink to="/settings/system" className={linkClass}>App settings</NavLink>
+          <NavLink to="/admin/sales-import" className={linkClass}>Bulk import</NavLink>
         </>
       ) : (
         <>
-          <Link to="/sales">Sales</Link>
-          <Link to="/customers">Customers</Link>
+          <NavLink to="/sales" end className={linkClass}>Sales</NavLink>
+          <NavLink to="/customers" className={linkClass}>Customers</NavLink>
         </>
       )}
     </nav>

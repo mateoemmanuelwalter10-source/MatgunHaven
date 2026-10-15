@@ -170,11 +170,34 @@
     display: none;
   }
 
-  .mobile-nav a {
+  .mobile-nav-link {
     flex: 0 0 auto;
-    padding: 8px;
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border: 1px solid var(--primary-color);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--primary-color);
     white-space: nowrap;
     font-size: 0.9rem;
+    font-weight: 600;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  .mobile-nav-link:first-child {
+    margin-inline-start: auto;
+  }
+
+  .mobile-nav-link:last-child {
+    margin-inline-end: auto;
+  }
+
+  .mobile-nav-link.active {
+    background: var(--primary-color);
+    color: var(--surface);
   }
 
   .footer {
