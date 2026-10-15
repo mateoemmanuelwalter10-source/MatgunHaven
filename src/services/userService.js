@@ -23,12 +23,11 @@ export async function fetchUsers() {
   return { data, error };
 }
 
-export async function createUserAccount({ name, email, password, role }) {
+export async function createUserAccount({ name, email, role }) {
   const { data, error } = await supabase.functions.invoke("create-user", {
     body: {
       name,
       email,
-      password,
       role,
     },
   });
@@ -36,33 +35,35 @@ export async function createUserAccount({ name, email, password, role }) {
   if (error) {
     let surfacedError = error;
     if (error instanceof FunctionsHttpError) {
-      const responseBody = await error.context.json();
-      if (typeof responseBody?.error === "string") {
-        surfacedError = new Error(responseBody.error);
+      const response = error.context.clone();
+      try {
+        const responseBody = await response.json();
+        const message = responseBody?.error || responseBody?.message;
+        if (typeof message === "string") {
+          surfacedError = new Error(message);
+        }
+      } catch {
+        surfacedError = new Error(`User creation failed (HTTP ${response.status}).`);
       }
     }
-    await logSystemError("create_user_account", surfacedError, { entityType: "user" });
+    await logSystemError("create_user_account", surfacedError, {
+      entityType: "user",
+      details: {
+        error_name: surfacedError.name,
+        error_message: surfacedError.message.slice(0, 300),
+        http_status:
+          error.context instanceof Response ? error.context.status : null,
+      },
+    });
     return { data, error: surfacedError };
   }
 
-  if (data?.user?.id) {
-    const { error: profileError } = await supabase.from("profiles").upsert({
-      id: data.user.id,
-      full_name: name,
-      role,
-    });
-    if (profileError) {
-      await logSystemError("create_user_profile", profileError, {
-        entityType: "user",
-        entityId: data.user.id,
-      });
-      return { data, error: profileError };
-    }
+  if (data?.id) {
     await logSystemEvent({
-      eventType: "create",
-      message: "User account created",
+      eventType: "invite",
+      message: "User invitation sent",
       entityType: "user",
-      entityId: data.user.id,
+      entityId: data.id,
     });
   }
 

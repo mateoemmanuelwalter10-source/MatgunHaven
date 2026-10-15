@@ -153,7 +153,24 @@
 .statement-paper-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 0.88rem;
+}
+
+.statement-paper-table th:nth-child(1) {
+  width: 28%;
+}
+
+.statement-paper-table th:nth-child(2) {
+  width: 27%;
+}
+
+.statement-paper-table th:nth-child(3) {
+  width: 15%;
+}
+
+.statement-paper-table th:nth-child(4) {
+  width: 30%;
 }
 
 .statement-paper-table th,

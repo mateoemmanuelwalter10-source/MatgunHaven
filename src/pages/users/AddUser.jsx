@@ -1,14 +1,12 @@
-﻿import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { createUserAccount } from "../../services/userService";
 import Loader from "../../components/common/Loader";
 
 export default function AddUser() {
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "user" });
+  const [form, setForm] = useState({ name: "", email: "", role: "user" });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -24,8 +22,8 @@ export default function AddUser() {
       return;
     }
 
-    setMessage("User created successfully.");
-    navigate("/users");
+    setMessage("Invitation email sent. The team member can confirm their email and set a password from the invitation.");
+    setForm({ name: "", email: "", role: "user" });
   }
 
   return (
@@ -33,8 +31,8 @@ export default function AddUser() {
       <div className="section-header">
         <div>
           <p className="eyebrow">Add user</p>
-          <h1>Create new team member</h1>
-          <p>Create a new admin or staff account for your team.</p>
+          <h1>Invite a team member</h1>
+          <p>Send an email invitation so they can confirm their email and set their password.</p>
         </div>
       </div>
 
@@ -60,16 +58,6 @@ export default function AddUser() {
           />
         </div>
         <div className="form-field">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={form.password}
-            onChange={(event) => setForm({ ...form, password: event.target.value })}
-            required
-          />
-        </div>
-        <div className="form-field">
           <label htmlFor="role">Role</label>
           <select
             id="role"
@@ -84,7 +72,7 @@ export default function AddUser() {
         {error && <div className="error-message">{error}</div>}
         <div className="form-actions">
           <button className="primary-button" type="submit" disabled={loading}>
-            {loading ? <Loader label="Creating user..." /> : "Create user"}
+            {loading ? <Loader label="Sending invitation..." /> : "Send invitation"}
           </button>
         </div>
       </form>

@@ -71,35 +71,34 @@ Deno.serve(async (request) => {
   const values = input as Record<string, unknown>;
   const name = typeof values.name === "string" ? values.name.trim() : "";
   const email = typeof values.email === "string" ? values.email.trim() : "";
-  const password = typeof values.password === "string" ? values.password : "";
   const role = typeof values.role === "string" ? values.role.trim().toLowerCase() : "";
-  if (!name || !email || !password || !["admin", "user"].includes(role)) {
-    return jsonResponse(400, { error: "Name, email, password, and a valid role are required." });
+  if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !["admin", "user"].includes(role)) {
+    return jsonResponse(400, { error: "A valid name, email, and role are required." });
   }
 
-  const { data: createdData, error: createError } = await adminClient.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: name, role },
-  });
-  if (createError || !createdData.user) {
-    return jsonResponse(400, { error: createError?.message || "Unable to create user." });
-  }
-
-  const { error: saveProfileError } = await adminClient.from("profiles").upsert({
-    id: createdData.user.id,
-    full_name: name,
-    role,
-  });
-  if (saveProfileError) {
-    const { error: cleanupError } = await adminClient.auth.admin.deleteUser(createdData.user.id);
-    if (cleanupError) {
-      console.error("Failed to clean up Auth user after profile creation failed:", cleanupError);
+  const requestOrigin = request.headers.get("origin");
+  let redirectTo: string | undefined;
+  if (requestOrigin) {
+    try {
+      const origin = new URL(requestOrigin);
+      const isLocalhost = origin.hostname === "localhost" || origin.hostname === "127.0.0.1";
+      if ((origin.protocol === "https:" || (isLocalhost && origin.protocol === "http:")) &&
+          origin.origin === requestOrigin) {
+        redirectTo = new URL("/reset-password", origin).toString();
+      }
+    } catch {
+      return jsonResponse(400, { error: "Invalid application origin for invitation redirect." });
     }
-    console.error("Unable to create user profile:", saveProfileError);
-    return jsonResponse(500, { error: "The user profile could not be created." });
   }
 
-  return jsonResponse(200, { id: createdData.user.id });
+  const { data: invitedData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: name, role },
+    ...(redirectTo ? { redirectTo } : {}),
+  });
+  if (inviteError || !invitedData.user) {
+    console.error("Unable to send user invitation:", inviteError);
+    return jsonResponse(400, { error: inviteError?.message || "Unable to send invitation." });
+  }
+
+  return jsonResponse(200, { id: invitedData.user.id });
 });

@@ -21,16 +21,34 @@ export function hasSupabaseConnectionFailed() {
   return supabaseConnectionFailed;
 }
 
+function isDatabaseRequest(input) {
+  const requestUrl =
+    input instanceof Request
+      ? input.url
+      : input instanceof URL
+        ? input.href
+        : String(input);
+
+  try {
+    return /\/rest\/v1(?:\/|$)/.test(new URL(requestUrl, supabaseUrl).pathname);
+  } catch {
+    return false;
+  }
+}
+
 async function monitoredFetch(...args) {
+  const databaseRequest = isDatabaseRequest(args[0]);
   let response;
   try {
     response = await fetch(...args);
   } catch (error) {
-    if (error?.name !== "AbortError") publishConnectionState(false);
+    if (databaseRequest && error?.name !== "AbortError") {
+      publishConnectionState(false);
+    }
     throw error;
   }
 
-  if (response.status >= 500) publishConnectionState(false);
+  if (databaseRequest && response.status >= 500) publishConnectionState(false);
   return response;
 }
 
