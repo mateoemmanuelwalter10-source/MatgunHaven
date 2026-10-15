@@ -1,1 +1,0 @@
-﻿-- Add Supabase policies for customers here
