@@ -53,6 +53,10 @@ function formatPdfAmount(value) {
   })}`;
 }
 
+function formatPdfQuantity(value) {
+  return (Number(value) || 0).toLocaleString("en-PH");
+}
+
 function safeFilename(value) {
   return value
     .normalize("NFKD")
@@ -163,12 +167,21 @@ export async function generateMonthlyStatementPdf({
       ])
     : [["—", "—", "—", "No deliveries recorded"]];
 
+  const totalGallons = sales.reduce(
+    (sum, sale) => sum + (Number(sale.gallons) || 0),
+    0,
+  );
+
   autoTable(doc, {
     startY: 205,
     margin: { left: margin, right: margin, top: 94, bottom: 42 },
     head: [["Date", "Delivery Receipt No.", "Quantity", "Amount"]],
     body,
-    foot: [["", "", "TOTAL", formatPdfAmount(total)]],
+    foot: [[
+      { content: "TOTAL", colSpan: 2 },
+      { content: formatPdfQuantity(totalGallons), styles: { halign: "left" } },
+      { content: formatPdfAmount(total), styles: { halign: "right" } },
+    ]],
     showFoot: "lastPage",
     theme: "grid",
     styles: {
@@ -193,7 +206,7 @@ export async function generateMonthlyStatementPdf({
     columnStyles: {
       0: { cellWidth: 100 },
       1: { cellWidth: 190 },
-      2: { cellWidth: 90, halign: "right" },
+      2: { cellWidth: 90, halign: "left" },
       3: { cellWidth: "auto", halign: "right" },
     },
     didDrawPage: (data) => {

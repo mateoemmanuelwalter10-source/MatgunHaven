@@ -111,6 +111,10 @@ export default function PrintSalesInvoice() {
     (total, sale) => total + (Number(sale.total_amount) || 0),
     0,
   );
+  const statementTotalGallons = statementSales.reduce(
+    (total, sale) => total + (Number(sale.gallons) || 0),
+    0,
+  );
   const businessName = businessSettings?.business_name || "Matgun Haven";
   const businessTagline =
     businessSettings?.business_tagline || "Purified Drinking Station";
@@ -293,7 +297,8 @@ export default function PrintSalesInvoice() {
                 </tr>
               )}
               <tr className="statement-total-row">
-                <td colSpan="3">TOTAL</td>
+                <td colSpan="2">TOTAL</td>
+                <td>{statementTotalGallons}</td>
                 <td>{formatMoney(statementTotal)}</td>
               </tr>
             </tbody>
