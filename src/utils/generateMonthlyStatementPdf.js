@@ -96,13 +96,21 @@ export async function generateMonthlyStatementPdf({
     month: "long",
     year: "numeric",
   });
-  const brandName = businessName || "Matgun Haven";
-  const brandFontSize = 20;
+  const brandName = (businessName || "MATGUN HAVEN")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleUpperCase();
   const logoSize = 62;
   const brandGap = 14;
   const maxBrandTextWidth = contentWidth - logoSize - brandGap;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(brandFontSize);
+  doc.setFontSize(20);
+  const naturalBrandNameWidth = doc.getTextWidth(brandName);
+  const brandNameFontSize = Math.min(
+    20,
+    (maxBrandTextWidth / naturalBrandNameWidth) * 20,
+  );
+  doc.setFontSize(brandNameFontSize);
   const brandNameWidth = doc.getTextWidth(brandName);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
@@ -117,9 +125,9 @@ export async function generateMonthlyStatementPdf({
   doc.addImage(logoData, "PNG", brandLeft, 24, logoSize, logoSize, undefined, "FAST");
   doc.setTextColor(23, 43, 77);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(brandFontSize);
+  doc.setFontSize(brandNameFontSize);
   doc.text(brandName, brandLeft + logoSize + brandGap, 52, {
-    maxWidth: brandTextWidth,
+    align: "left",
   });
   if (businessTagline) {
     doc.setTextColor(82, 96, 109);
@@ -179,7 +187,7 @@ export async function generateMonthlyStatementPdf({
     body,
     foot: [[
       { content: "TOTAL", colSpan: 2 },
-      { content: formatPdfQuantity(totalGallons), styles: { halign: "left" } },
+      { content: formatPdfQuantity(totalGallons), styles: { halign: "right" } },
       { content: formatPdfAmount(total), styles: { halign: "right" } },
     ]],
     showFoot: "lastPage",
@@ -206,12 +214,14 @@ export async function generateMonthlyStatementPdf({
     columnStyles: {
       0: { cellWidth: 100 },
       1: { cellWidth: 190 },
-      2: { cellWidth: 90, halign: "left" },
+      2: { cellWidth: 90, halign: "right" },
       3: { cellWidth: "auto", halign: "right" },
     },
     didDrawPage: (data) => {
       if (data.pageNumber > 1) {
         const continuationLogoSize = 42;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
         const continuationTextWidth = Math.min(
           doc.getTextWidth(brandName),
           contentWidth - continuationLogoSize - 10,
@@ -229,10 +239,8 @@ export async function generateMonthlyStatementPdf({
           "FAST",
         );
         doc.setTextColor(23, 43, 77);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
         doc.text(brandName, continuationLeft + continuationLogoSize + 10, 42, {
-          maxWidth: continuationTextWidth,
+          align: "left",
         });
         doc.setFont("helvetica", "normal");
         doc.setTextColor(82, 96, 109);

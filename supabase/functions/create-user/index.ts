@@ -76,24 +76,30 @@ Deno.serve(async (request) => {
     return jsonResponse(400, { error: "A valid name, email, and role are required." });
   }
 
-  const requestOrigin = request.headers.get("origin");
-  let redirectTo: string | undefined;
-  if (requestOrigin) {
-    try {
-      const origin = new URL(requestOrigin);
-      const isLocalhost = origin.hostname === "localhost" || origin.hostname === "127.0.0.1";
-      if ((origin.protocol === "https:" || (isLocalhost && origin.protocol === "http:")) &&
-          origin.origin === requestOrigin) {
-        redirectTo = new URL("/reset-password", origin).toString();
-      }
-    } catch {
-      return jsonResponse(400, { error: "Invalid application origin for invitation redirect." });
+  let redirectTo: string;
+  try {
+    const appUrl = new URL(
+      Deno.env.get("APP_URL") || "https://matgunhaven-primary.pages.dev",
+    );
+    if (
+      appUrl.protocol !== "https:" ||
+      appUrl.pathname !== "/" ||
+      appUrl.search ||
+      appUrl.hash ||
+      appUrl.username ||
+      appUrl.password
+    ) {
+      throw new Error("APP_URL must be an HTTPS origin without a path.");
     }
+    redirectTo = new URL("/reset-password", appUrl).toString();
+  } catch (error) {
+    console.error("Invalid application URL for invitation redirect:", error);
+    return jsonResponse(500, { error: "User invitation redirect is not configured correctly." });
   }
 
   const { data: invitedData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
     data: { full_name: name, role },
-    ...(redirectTo ? { redirectTo } : {}),
+    redirectTo,
   });
   if (inviteError || !invitedData.user) {
     console.error("Unable to send user invitation:", inviteError);

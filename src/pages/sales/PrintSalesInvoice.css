@@ -191,6 +191,11 @@
   text-align: right;
 }
 
+.statement-paper-table td:nth-child(3),
+.statement-paper-table th:nth-child(3) {
+  text-align: right;
+}
+
 .statement-paper-table .statement-empty-row {
   height: 64px;
   color: #6b7280;

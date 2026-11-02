@@ -115,7 +115,8 @@ export default function PrintSalesInvoice() {
     (total, sale) => total + (Number(sale.gallons) || 0),
     0,
   );
-  const businessName = businessSettings?.business_name || "Matgun Haven";
+  const businessName = businessSettings?.business_name || "MATGUN HAVEN";
+  const displayBusinessName = businessName.toLocaleUpperCase();
   const businessTagline =
     businessSettings?.business_tagline || "Purified Drinking Station";
   const businessLogo = businessSettings?.logo_url || defaultLogo;
@@ -250,9 +251,9 @@ export default function PrintSalesInvoice() {
         <article className="statement-paper" aria-label="Monthly statement format preview">
           <header className="statement-paper-header">
             <div className="statement-business-brand">
-              <img src={businessLogo} alt={`${businessName} logo`} />
+              <img src={businessLogo} alt={`${displayBusinessName} logo`} />
               <div>
-                <h2>{businessName}</h2>
+                <h2>{displayBusinessName}</h2>
                 {businessTagline && <p>{businessTagline}</p>}
               </div>
             </div>
